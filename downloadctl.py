@@ -1,5 +1,6 @@
 import calendar
 from threading import Thread
+import os
 
 import cdsapi
 
@@ -35,7 +36,10 @@ def DownLoad(year, month):
     dic['month'] = str(month).zfill(2)
     dic['day'] = [str(i).zfill(2) for i in range(1, days + 1)]
     filename = 'E:\\' + str(year) + str(month).zfill(2) + '.grib'
+    if os.path.exists(filename):
+        return None
     c.retrieve('reanalysis-era5-pressure-levels', dic, filename)
+    RFT(filename)
 
 
 def DownLoad1():
@@ -79,6 +83,12 @@ def StartDownload():
     t3.start()
     t4.start()
     t5.start()
+
+
+def RFT(filename):
+    with open("./redownload.txt", 'a') as f:
+        f.write(filename+'\n')
+
 
 StartDownload()
 
