@@ -31,43 +31,45 @@ dic = {
 
 
 def DownLoad(year, month):
+    f = open("redownload.txt", 'r')
+    existedFiles = [dates.replace('\n', '') for dates in f.readlines()]
     days = calendar.monthrange(year, month)[1]
     dic['year'] = str(year)
     dic['month'] = str(month).zfill(2)
     dic['day'] = [str(i).zfill(2) for i in range(1, days + 1)]
     filename = 'E:\\' + str(year) + str(month).zfill(2) + '.grib'
-    if os.path.exists(filename):
+    if os.path.exists(filename) and filename in existedFiles:
         return None
     c.retrieve('reanalysis-era5-pressure-levels', dic, filename)
     RFT(filename)
 
 
 def DownLoad1():
-    for year in range(1953, 1964):
+    for year in range(1957, 1964):
         for month in range(1, 13):
             DownLoad(year, month)
 
 
 def DownLoad2():
-    for year in range(1967, 1978):
+    for year in range(1971, 1978):
         for month in range(1, 13):
             DownLoad(year, month)
 
 
 def DownLoad3():
-    for year in range(1981, 1992):
+    for year in range(1985, 1992):
         for month in range(1, 13):
             DownLoad(year, month)
 
 
 def DownLoad4():
-    for year in range(1995, 2006):
+    for year in range(1999, 2006):
         for month in range(1, 13):
             DownLoad(year, month)
 
 
 def DownLoad5():
-    for year in range(2009, 2020):
+    for year in range(2013, 2020):
         for month in range(1, 13):
             DownLoad(year, month)
 
@@ -86,7 +88,7 @@ def StartDownload():
 
 
 def RFT(filename):
-    with open("./redownload.txt", 'a') as f:
+    with open("redownload.txt", 'a') as f:
         f.write(filename+'\n')
 
 

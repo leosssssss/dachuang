@@ -241,16 +241,26 @@ def DownLoad(year, month):
     :param month: 下载的月份
     :return: 无返回值
     '''
+    f = open("redownload.txt", 'r')
+    existedFiles = [dates.replace('\n', '') for dates in f.readlines()]
     days = calendar.monthrange(year, month)[1]
     dic['year'] = str(year)
     dic['month'] = str(month).zfill(2)
     dic['day'] = [str(i).zfill(2) for i in range(1, days + 1)]
     filename = 'E:\\' + str(year) + str(month).zfill(2) + '.grib'
-    if os.path.exists(filename):
+    if os.path.exists(filename) and filename in existedFiles:
         return None
-    else:
-        c.retrieve('reanalysis-era5-pressure-levels', dic, filename)
-    return None
+    c.retrieve('reanalysis-era5-pressure-levels', dic, filename)
+    RFT(filename)
+
+
+def RFT(filename):
+    '''
+    用于写记录已完成下载的文件
+    '''
+    with open("redownload.txt", 'a') as f:
+        f.write(filename+'\n')
+
 
 def StartDownload(start, end, threadNum=5):
     '''
