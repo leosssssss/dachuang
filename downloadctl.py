@@ -1,8 +1,9 @@
 import calendar
 from threading import Thread
 import os
-
 import cdsapi
+from tkinter import messagebox
+
 
 c = cdsapi.Client()
 
@@ -42,34 +43,35 @@ def DownLoad(year, month):
         return None
     c.retrieve('reanalysis-era5-pressure-levels', dic, filename)
     RFT(filename)
+    messagebox.showinfo("attention!", f"file {filename[4:10]}has downloaded!")
 
 
 def DownLoad1():
-    for year in range(1957, 1964):
+    for year in range(1949, 1964):
         for month in range(1, 13):
             DownLoad(year, month)
 
 
 def DownLoad2():
-    for year in range(1971, 1978):
+    for year in range(1964, 1978):
         for month in range(1, 13):
             DownLoad(year, month)
 
 
 def DownLoad3():
-    for year in range(1985, 1992):
+    for year in range(1978, 1992):
         for month in range(1, 13):
             DownLoad(year, month)
 
 
 def DownLoad4():
-    for year in range(1999, 2006):
+    for year in range(1992, 2006):
         for month in range(1, 13):
             DownLoad(year, month)
 
 
 def DownLoad5():
-    for year in range(2013, 2020):
+    for year in range(2006, 2020):
         for month in range(1, 13):
             DownLoad(year, month)
 
