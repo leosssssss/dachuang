@@ -43,7 +43,7 @@ def DownLoad(year, month):
         return None
     c.retrieve('reanalysis-era5-pressure-levels', dic, filename)
     RFT(filename)
-    messagebox.showinfo("attention!", f"file {filename[4:10]}has downloaded!")
+    messagebox.showinfo("attention!", f"file {filename[3:10]}has downloaded!")
 
 
 def DownLoad1():
