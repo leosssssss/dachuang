@@ -3,7 +3,11 @@ from bs4 import BeautifulSoup
 import json
 import os
 import pandas as pd
-def GetInfo(url, time, nums):
+import ast
+import datetime
+
+
+def GetInfo(url, time, nums, country='中国'):
     '''
     time: 需要搜索的台风年份
     nums: 需要搜索的台风序号
@@ -14,7 +18,7 @@ def GetInfo(url, time, nums):
         nums = '0' + str(nums)
     else:
         nums = str(nums)
-        #如果不够10则在前面补0
+        # 如果不够10则在前面补0
     headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                              "Chrome/115.0.0.0 Safari/537.36"}  # 反爬用的识别号，根据自己电脑浏览器的型号自行更改
     response = requests.get(url + str(time) + nums, headers=headers)
@@ -25,40 +29,73 @@ def GetInfo(url, time, nums):
     saveData = open(f'./typhoon/{str(time)}/data{str(time)}{str(nums)}.txt', 'a+', encoding='utf-8')
     rsp = BeautifulSoup(reText, 'html.parser')
     rsp.prettify()
-    #获取包含预测数据的json文件
+    # 获取包含预测数据的json文件
     responseDict = json.loads(rsp.text)
     points = responseDict['points']
     for point in points:
         forecasts = []
         if len(point['forecast']) != 0:
             forecasts = point['forecast']
-        forecastList = []   #用列表接预测的数据
+            forecast = forecasts[0]
+        forecastList = []  # 用列表接预测的数据
         for forecast in forecasts:
-            if forecast['tm'] == '中国':
+            if forecast['tm'] == country:
                 forecastList.append(forecast['forecastpoints'])
+            else:
+                continue
         if len(forecastList) != 0:
-            saveData.write(str(forecastList) + "\n")
+            saveData.write(str(forecastList[0]) + "\n")
         else:
             continue
         forecastList = forecastList[0]
+    saveData.close()
     response.close()
     return saveData
 
 
-url = 'https://typhoon.slt.zj.gov.cn/Api/TyphoonInfo/'   #台风路径的发布网站
-startTime = 2009
-for time in range(startTime, 2024):
-    os.makedirs(f'./typhoon/{str(time)}')
-    for num in range(50):
-        GetInfo(url, time, num)
-    print(str(time) + 'done')
-print('done')
+def DataArrange(year, endYear=datetime.datetime.today().year):
+    names = ['time', 'lon', 'lat', "strong", "power", "speed", "pressure"]
+    pdData = pd.read_excel('D:\datas\python\dachuang\\typhoon(CHINA)\\typhoon forecast data.xlsx',
+                         names=['nums', 'time+0', 'lon+0', 'lat+0', "strong+0", "power+0", "speed+0", "pressure+0"])
+    index = 0
+    for year in range(year, endYear):
+        folderPath = f'D:\datas\python\dachuang\\typhoon(CHINA)\\{str(year)}'
+        for nums in range(len(os.listdir(folderPath))):
+            nums = nums + 1
+            if nums < 10:
+                nums = '0' + str(nums)
+            else:
+                nums = str(nums)
+            filename = folderPath + f'\data{str(year)}{nums}.txt'
+            if os.path.exists(filename) == False:
+                continue
+            typhoonForecast = open(filename, "r", encoding='utf-8')
+            for line in typhoonForecast:
+                points = line[1:-2]
+                points = ast.literal_eval(points)
+                for i in range(len(points)):
+                    point = points[i]
+                    pdData.loc[index, 'nums'] = str(year) + str(nums)
+                    pdData.loc[index, "time+" + str(i)] = point['time']
+                    pdData.loc[index, "lon+" + str(i)] = point['lng']
+                    pdData.loc[index, "lat+" + str(i)] = point['lat']
+                    pdData.loc[index, "strong+" + str(i)] = point['strong']
+                    pdData.loc[index, "power+" + str(i)] = point['power']
+                    pdData.loc[index, "speed+" + str(i)] = point['speed']
+                    pdData.loc[index, "pressure+" + str(i)] = point['pressure']
+                index += 1
+    pdData.to_excel('D:\datas\python\dachuang\\typhoon(CHINA)\\typhoon forecast data.xlsx')
+
+url = 'https://typhoon.slt.zj.gov.cn/Api/TyphoonInfo/'  # 台风路径的发布网站
 
 
+def GetData(startTime=2009, endTime=datetime.datetime.today().year, country='中国'):
+    for time in range(startTime, endTime):
+        os.makedirs(f'./typhoon/{str(time)}')
+        for num in range(50):
+            GetInfo(url, time, num, country)
+        print(str(time) + 'done')
+    print('done')
 
 
-
-
-
-
-
+DataArrange(2009)
