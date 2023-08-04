@@ -56,7 +56,7 @@ def GetInfo(url, time, nums, country='中国'):
 def DataArrange(year, endYear=datetime.datetime.today().year):
     names = ['time', 'lon', 'lat', "strong", "power", "speed", "pressure"]
     pdData = pd.read_excel('D:\datas\python\dachuang\\typhoon(CHINA)\\typhoon forecast data.xlsx',
-                         names=['nums', 'time+0', 'lon+0', 'lat+0', "strong+0", "power+0", "speed+0", "pressure+0"])
+                           names=['nums', 'time+0', 'lon+0', 'lat+0', "strong+0", "power+0", "speed+0", "pressure+0"])
     index = 0
     for year in range(year, endYear):
         folderPath = f'D:\datas\python\dachuang\\typhoon(CHINA)\\{str(year)}'
@@ -86,16 +86,48 @@ def DataArrange(year, endYear=datetime.datetime.today().year):
                 index += 1
     pdData.to_excel('D:\datas\python\dachuang\\typhoon(CHINA)\\typhoon forecast data.xlsx')
 
+
 url = 'https://typhoon.slt.zj.gov.cn/Api/TyphoonInfo/'  # 台风路径的发布网站
 
 
 def GetData(startTime=2009, endTime=datetime.datetime.today().year, country='中国'):
+    '''
+    :param startTime: 数据的开始时间
+    :param endTime: 数据的结束时间
+    :param country: 选择整理的区域
+    :return: 成功则返回0
+    '''
     for time in range(startTime, endTime):
         os.makedirs(f'./typhoon/{str(time)}')
         for num in range(50):
             GetInfo(url, time, num, country)
         print(str(time) + 'done')
     print('done')
+    return 0
 
 
-DataArrange(2009)
+def PreAnalyze():
+    '''
+    本函数用于优化数据，添加了真实数据用于对比
+    :return: 成功则返回0
+    '''
+    adress = './/typhoon(CHINA)//typhoon forecast data.csv'
+    forecastData = pd.read_csv(adress, low_memory=False, index_col=0)
+    forecastData = forecastData.drop_duplicates()
+    cnt = 0
+    for i in range(forecastData.shape[0]):
+        i -= cnt
+        index = forecastData[(forecastData['time+0']==forecastData.iloc[i, 8])&(forecastData['nums']==forecastData.iloc[i, 0])].index.to_list()
+        if index == []:
+            forecastData.drop(index=[i], axis=0, inplace=True)
+            forecastData = forecastData.reset_index(drop=True)
+            cnt += 1
+        else:
+            index = index[0]
+            forecastData.loc[i, 'forecastLon'] = forecastData.loc[index, 'lon+0']
+            forecastData.loc[i, 'forecastLat'] = forecastData.loc[index, 'lat+0']
+            forecastData.loc[i, 'forecastPower'] = forecastData.loc[index, 'power+0']
+            forecastData.loc[i, 'forecastPressure'] = forecastData.loc[index, 'pressure+0']
+    adressNew = './/typhoon(CHINA)//typhoon forecast data2.csv'
+    forecastData.to_csv(adressNew, index=False)
+    return 0
