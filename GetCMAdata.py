@@ -53,9 +53,9 @@ def GetInfo(url, time, nums, country='中国'):
     return saveData
 
 
-def DataArrange(year, endYear=datetime.datetime.today().year):
+def DataArrange(year=2009, endYear=datetime.datetime.today().year):
     names = ['time', 'lon', 'lat', "strong", "power", "speed", "pressure"]
-    pdData = pd.read_excel('D:\datas\python\dachuang\\typhoon(CHINA)\\typhoon forecast data.xlsx',
+    pdData = pd.read_csv('D:\datas\python\dachuang\\typhoon(CHINA)\\typhoon forecast data3.csv',
                            names=['nums', 'time+0', 'lon+0', 'lat+0', "strong+0", "power+0", "speed+0", "pressure+0"])
     index = 0
     for year in range(year, endYear):
@@ -84,7 +84,8 @@ def DataArrange(year, endYear=datetime.datetime.today().year):
                     pdData.loc[index, "speed+" + str(i)] = point['speed']
                     pdData.loc[index, "pressure+" + str(i)] = point['pressure']
                 index += 1
-    pdData.to_excel('D:\datas\python\dachuang\\typhoon(CHINA)\\typhoon forecast data.xlsx')
+    pdData.to_csv('D:\datas\python\dachuang\\typhoon(CHINA)\\typhoon forecast data3.csv')
+    return 'yes'
 
 
 url = 'https://typhoon.slt.zj.gov.cn/Api/TyphoonInfo/'  # 台风路径的发布网站
@@ -106,13 +107,13 @@ def GetData(startTime=2009, endTime=datetime.datetime.today().year, country='中
     return 0
 
 
-def PreAnalyze():
+def PreAnalysis():
     '''
     本函数用于优化数据，添加了真实数据用于对比
     :return: 成功则返回0
     '''
     adress = './/typhoon(CHINA)//typhoon forecast data.csv'
-    forecastData = pd.read_csv(adress, low_memory=False, index_col=0)
+    forecastData = pd.read_csv(adress, low_memory=False, encoding='GBK')
     forecastData = forecastData.drop_duplicates()
     cnt = 0
     for i in range(forecastData.shape[0]):
@@ -128,6 +129,62 @@ def PreAnalyze():
             forecastData.loc[i, 'forecastLat'] = forecastData.loc[index, 'lat+0']
             forecastData.loc[i, 'forecastPower'] = forecastData.loc[index, 'power+0']
             forecastData.loc[i, 'forecastPressure'] = forecastData.loc[index, 'pressure+0']
-    adressNew = './/typhoon(CHINA)//typhoon forecast data2.csv'
+            forecastData.loc[i, 'forecastSpeed'] = forecastData.loc[index, 'speed+0']
+    adressNew = './/typhoon(CHINA)//typhoon forecast data3.csv'
     forecastData.to_csv(adressNew, index=False)
     return 0
+
+
+def Adjust():
+    '''
+    :return:用于修正台风预测值（四舍五入）
+    '''
+    address = "D:\datas\python\dachuang\\typhoon(CHINA)\\台风预测值与真实值对照数据（12小时版）.csv"
+    forecastData = pd.read_csv(address, low_memory=False)
+    for i in range(forecastData.shape[0]):
+        if 0 < forecastData.loc[i, 'speed+0']%10 < 2.5:
+            forecastData.loc[i, 'speed+0'] = int(forecastData.loc[i, 'speed+0']/10)*10
+        elif 2.5 <= forecastData.loc[i, 'speed+0'] < 5:
+            forecastData.loc[i, 'speed+0'] = int(forecastData.loc[i, 'speed+0']/10)*10 + 2.5
+        elif 5 <= forecastData.loc[i, 'speed+0'] < 7.5:
+            forecastData.loc[i, 'speed+0'] = int(forecastData.loc[i, 'speed+0']/10)*10 + 2.5
+        else:
+            forecastData.loc[i, 'speed+0'] = int(forecastData.loc[i, 'speed+0']/10)*10 + 7.5
+
+        if 0 < forecastData.loc[i, 'pressure+0']%10 < 2.5:
+            forecastData.loc[i, 'pressure+0'] = int(forecastData.loc[i, 'pressure+0']/10)*10
+        elif 2.5 <= forecastData.loc[i, 'pressure+0'] < 5:
+            forecastData.loc[i, 'pressure+0'] = int(forecastData.loc[i, 'pressure+0']/10)*10 + 2.5
+        elif 5 <= forecastData.loc[i, 'pressure+0'] < 7.5:
+            forecastData.loc[i, 'pressure+0'] = int(forecastData.loc[i, 'pressure+0']/10)*10 + 2.5
+        else:
+            forecastData.loc[i, 'pressure+0'] = int(forecastData.loc[i, 'pressure+0']/10)*10 + 7.5
+
+        if 0 < forecastData.loc[i, 'forecastPressure']%10 < 2.5:
+            forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10
+        elif 2.5 <= forecastData.loc[i, 'forecastPressure'] < 5:
+            forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 2.5
+        elif 5 <= forecastData.loc[i, 'forecastPressure'] < 7.5:
+            forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 2.5
+        else:
+            forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 7.5
+
+        if 0 < forecastData.loc[i, 'forecastSpeed']%10 < 2.5:
+            forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10
+        elif 2.5 <= forecastData.loc[i, 'forecastSpeed'] < 5:
+            forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10 + 2.5
+        elif 5 <= forecastData.loc[i, 'forecastSpeed'] < 7.5:
+            forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10 + 2.5
+        else:
+            forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10 + 7.5
+    forecastData.to_csv(address, index=False)
+
+Adjust()
+
+'''
+使用顺序：
+1. GetInfo()
+2. DataArrange()
+3. PreAnalysis()
+4. Adjust()
+'''
