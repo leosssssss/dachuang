@@ -179,7 +179,7 @@ def Adjust():
             forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10 + 7.5
     forecastData.to_csv(address, index=False)
 
-Adjust()
+
 
 '''
 使用顺序：
