@@ -158,23 +158,15 @@ def Adjust():
             pass
         elif 0 <= forecastData.loc[i, 'pressure+1']%10 < 2.5:
             forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10
-        elif 2.5 <= forecastData.loc[i, 'pressure+1']%10 < 5:
-            forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10 + 2.5
         elif 5 <= forecastData.loc[i, 'pressure+1']%10 < 7.5:
             forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10 + 5
-        else:
-            forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10 + 7.5
 
         if np.isnan(forecastData.loc[i, 'forecastPressure']):
             pass
         elif 0 <= forecastData.loc[i, 'forecastPressure']%10 < 2.5:
             forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10
-        elif 2.5 <= forecastData.loc[i, 'forecastPressure']%10 < 5:
-            forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 2.5
         elif 5 <= forecastData.loc[i, 'forecastPressure']%10 < 7.5:
             forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 5
-        else:
-            forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 7.5
 
         if np.isnan(forecastData.loc[i, 'forecastSpeed']):
             pass
