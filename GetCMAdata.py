@@ -147,9 +147,9 @@ def Adjust():
             pass
         elif 0 <= forecastData.loc[i, 'speed+1']%10 < 2.5:
             forecastData.loc[i, 'speed+1'] = int(forecastData.loc[i, 'speed+1']/10)*10
-        elif 2.5 <= forecastData.loc[i, 'speed+1'] < 5:
+        elif 2.5 <= forecastData.loc[i, 'speed+1']%10 < 5:
             forecastData.loc[i, 'speed+1'] = int(forecastData.loc[i, 'speed+1']/10)*10 + 2.5
-        elif 5 <= forecastData.loc[i, 'speed+1'] < 7.5:
+        elif 5 <= forecastData.loc[i, 'speed+1']%10 < 7.5:
             forecastData.loc[i, 'speed+1'] = int(forecastData.loc[i, 'speed+1']/10)*10 + 5
         else:
             forecastData.loc[i, 'speed+1'] = int(forecastData.loc[i, 'speed+1']/10)*10 + 7.5
@@ -158,9 +158,9 @@ def Adjust():
             pass
         elif 0 <= forecastData.loc[i, 'pressure+1']%10 < 2.5:
             forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10
-        elif 2.5 <= forecastData.loc[i, 'pressure+1'] < 5:
+        elif 2.5 <= forecastData.loc[i, 'pressure+1']%10 < 5:
             forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10 + 2.5
-        elif 5 <= forecastData.loc[i, 'pressure+1'] < 7.5:
+        elif 5 <= forecastData.loc[i, 'pressure+1']%10 < 7.5:
             forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10 + 5
         else:
             forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10 + 7.5
@@ -169,9 +169,9 @@ def Adjust():
             pass
         elif 0 <= forecastData.loc[i, 'forecastPressure']%10 < 2.5:
             forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10
-        elif 2.5 <= forecastData.loc[i, 'forecastPressure'] < 5:
+        elif 2.5 <= forecastData.loc[i, 'forecastPressure']%10 < 5:
             forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 2.5
-        elif 5 <= forecastData.loc[i, 'forecastPressure'] < 7.5:
+        elif 5 <= forecastData.loc[i, 'forecastPressure']%10 < 7.5:
             forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 5
         else:
             forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 7.5
@@ -180,9 +180,9 @@ def Adjust():
             pass
         if 0 <= forecastData.loc[i, 'forecastSpeed']%10 < 2.5:
             forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10
-        elif 2.5 <= forecastData.loc[i, 'forecastSpeed'] < 5:
+        elif 2.5 <= forecastData.loc[i, 'forecastSpeed']%10 < 5:
             forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10 + 2.5
-        elif 5 <= forecastData.loc[i, 'forecastSpeed'] < 7.5:
+        elif 5 <= forecastData.loc[i, 'forecastSpeed']%10 < 7.5:
             forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10 + 5
         else:
             forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10 + 7.5
