@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import ast
 import datetime
+import numpy as np
 
 
 def GetInfo(url, time, nums, country='中国'):
@@ -139,48 +140,56 @@ def Adjust():
     '''
     :return:用于修正台风预测值（四舍五入）
     '''
-    address = "D:\datas\python\dachuang\\typhoon(CHINA)\\台风预测值与真实值对照数据（12小时版）.csv"
+    address = "D:\datas\python\dachuang\\typhoon(CHINA)\台风预测值与真实值对照数据（12小时版）（原版） - 副本 - 副本.csv"
     forecastData = pd.read_csv(address, low_memory=False)
     for i in range(forecastData.shape[0]):
-        if 0 < forecastData.loc[i, 'speed+0']%10 < 2.5:
-            forecastData.loc[i, 'speed+0'] = int(forecastData.loc[i, 'speed+0']/10)*10
-        elif 2.5 <= forecastData.loc[i, 'speed+0'] < 5:
-            forecastData.loc[i, 'speed+0'] = int(forecastData.loc[i, 'speed+0']/10)*10 + 2.5
-        elif 5 <= forecastData.loc[i, 'speed+0'] < 7.5:
-            forecastData.loc[i, 'speed+0'] = int(forecastData.loc[i, 'speed+0']/10)*10 + 2.5
+        if np.isnan(forecastData.loc[i, 'speed+1']):
+            pass
+        elif 0 <= forecastData.loc[i, 'speed+1']%10 < 2.5:
+            forecastData.loc[i, 'speed+1'] = int(forecastData.loc[i, 'speed+1']/10)*10
+        elif 2.5 <= forecastData.loc[i, 'speed+1'] < 5:
+            forecastData.loc[i, 'speed+1'] = int(forecastData.loc[i, 'speed+1']/10)*10 + 2.5
+        elif 5 <= forecastData.loc[i, 'speed+1'] < 7.5:
+            forecastData.loc[i, 'speed+1'] = int(forecastData.loc[i, 'speed+1']/10)*10 + 5
         else:
-            forecastData.loc[i, 'speed+0'] = int(forecastData.loc[i, 'speed+0']/10)*10 + 7.5
+            forecastData.loc[i, 'speed+1'] = int(forecastData.loc[i, 'speed+1']/10)*10 + 7.5
 
-        if 0 < forecastData.loc[i, 'pressure+0']%10 < 2.5:
-            forecastData.loc[i, 'pressure+0'] = int(forecastData.loc[i, 'pressure+0']/10)*10
-        elif 2.5 <= forecastData.loc[i, 'pressure+0'] < 5:
-            forecastData.loc[i, 'pressure+0'] = int(forecastData.loc[i, 'pressure+0']/10)*10 + 2.5
-        elif 5 <= forecastData.loc[i, 'pressure+0'] < 7.5:
-            forecastData.loc[i, 'pressure+0'] = int(forecastData.loc[i, 'pressure+0']/10)*10 + 2.5
+        if np.isnan(forecastData.loc[i, 'pressure+1']):
+            pass
+        elif 0 <= forecastData.loc[i, 'pressure+1']%10 < 2.5:
+            forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10
+        elif 2.5 <= forecastData.loc[i, 'pressure+1'] < 5:
+            forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10 + 2.5
+        elif 5 <= forecastData.loc[i, 'pressure+1'] < 7.5:
+            forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10 + 5
         else:
-            forecastData.loc[i, 'pressure+0'] = int(forecastData.loc[i, 'pressure+0']/10)*10 + 7.5
+            forecastData.loc[i, 'pressure+1'] = int(forecastData.loc[i, 'pressure+1']/10)*10 + 7.5
 
-        if 0 < forecastData.loc[i, 'forecastPressure']%10 < 2.5:
+        if np.isnan(forecastData.loc[i, 'forecastPressure']):
+            pass
+        elif 0 <= forecastData.loc[i, 'forecastPressure']%10 < 2.5:
             forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10
         elif 2.5 <= forecastData.loc[i, 'forecastPressure'] < 5:
             forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 2.5
         elif 5 <= forecastData.loc[i, 'forecastPressure'] < 7.5:
-            forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 2.5
+            forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 5
         else:
             forecastData.loc[i, 'forecastPressure'] = int(forecastData.loc[i, 'forecastPressure']/10)*10 + 7.5
 
-        if 0 < forecastData.loc[i, 'forecastSpeed']%10 < 2.5:
+        if np.isnan(forecastData.loc[i, 'forecastSpeed']):
+            pass
+        if 0 <= forecastData.loc[i, 'forecastSpeed']%10 < 2.5:
             forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10
         elif 2.5 <= forecastData.loc[i, 'forecastSpeed'] < 5:
             forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10 + 2.5
         elif 5 <= forecastData.loc[i, 'forecastSpeed'] < 7.5:
-            forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10 + 2.5
+            forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10 + 5
         else:
             forecastData.loc[i, 'forecastSpeed'] = int(forecastData.loc[i, 'forecastSpeed']/10)*10 + 7.5
     forecastData.to_csv(address, index=False)
 
 
-
+Adjust()
 '''
 使用顺序：
 1. GetInfo()
