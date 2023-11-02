@@ -19,11 +19,27 @@ def PotentialVorticity(vo, t, P=500):
     return potentialVorticity
 
 
+def OneWave(data):
+    """
+    :param data: 传入的数据
+    :return: 返回取得一波非对称信息后的数据
+    """
+    fr = np.fft.fft(data)
+    fr1 = fr[1]
+    A = np.sqrt(fr1.imag ** 2 + fr1.real ** 2)
+    maxI = fr1[A == max(A)]
+    maxA = max(A)
+    angle = np.angle(maxI)
+    returnList = [maxA, angle]
+    return returnList
+
 adressF = 'D:/datas/dachuang/台风预测数据/typhoon(CHINA)/typhoon forecast data.csv'
+adressLSM = "D:/datas/dachuang/masks/IMERG_land_sea_mask.nc"
 adressERAH = "E:/data/"
 adressERAT = ".grib"
 Frange = 4.5
 forcastData = pd.read_csv(adressF, index_col=0, low_memory=False)
+LSMask = xr.open_dataset(adressLSM)
 for i in range(forcastData.shape[0]):
     month = forcastData.loc[i, 'time+0'][0:4]+forcastData.loc[i, 'time+0'][5:7]
     time = forcastData.loc[i, 'time+0']
@@ -32,11 +48,12 @@ for i in range(forcastData.shape[0]):
     ERA = xr.open_dataset(adressERAH+month+adressERAT, engine='cfgrib', mask_and_scale=False)
     d500 = ERA.d.loc[time, lat+Frange:lat-Frange, lon-Frange:lon+Frange].values #500hPa的散度
     u500 = ERA.u.loc[time, lat+Frange:lat-Frange, lon-Frange:lon+Frange].values #500hPa的水平风速
-    """
-    计算位势涡度（使用ertel位涡计算）"""
     vo500 = ERA.vo.loc[time, lat+Frange:lat-Frange, lon-Frange:lon+Frange].values   #500hPa的绝对涡度
     t500 = ERA.vo.loc[time, lat+Frange:lat-Frange, lon-Frange:lon+Frange].values    #500hPa的温度
     pv = PotentialVorticity(vo500, t500)    #500hPa的位涡
-    print(pv)
+    LSM = LSMask.landseamask.loc[lat-Frange:lat+Frange, lon-Frange:lon+Frange].values   #海陆遮罩
+    LSMOW = OneWave(LSM)
+
+    print(LSMOW)
     xr.Dataset.close(ERA)
     break
