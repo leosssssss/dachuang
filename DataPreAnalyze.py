@@ -37,9 +37,11 @@ adressF = 'D:/datas/dachuang/台风预测数据/typhoon(CHINA)/typhoon forecast 
 adressLSM = "D:/datas/dachuang/masks/IMERG_land_sea_mask.nc"
 adressERAH = "E:/data/"
 adressERAT = ".grib"
+adressGeopotential = "D:/datas/dachuang/masks/Geopotential.grib"
 Frange = 4.5
 forcastData = pd.read_csv(adressF, index_col=0, low_memory=False)
 LSMask = xr.open_dataset(adressLSM)
+geopotential = xr.open_dataset(adressGeopotential, engine='cfgrib')
 for i in range(forcastData.shape[0]):
     month = forcastData.loc[i, 'time+0'][0:4]+forcastData.loc[i, 'time+0'][5:7]
     time = forcastData.loc[i, 'time+0']
@@ -52,8 +54,8 @@ for i in range(forcastData.shape[0]):
     t500 = ERA.vo.loc[time, lat+Frange:lat-Frange, lon-Frange:lon+Frange].values    #500hPa的温度
     pv = PotentialVorticity(vo500, t500)    #500hPa的位涡
     LSM = LSMask.landseamask.loc[lat-Frange:lat+Frange, lon-Frange:lon+Frange].values   #海陆遮罩
-    LSMOW = OneWave(LSM)
-
-    print(LSMOW)
+    G = geopotential.z.loc[lat+Frange:lat-Frange, lon-Frange:lon+Frange].values #地势
+    LSMOW = OneWave(LSM)    #海陆遮罩的一波处理
+    GOW = OneWave(G) #地势的一波处理
     xr.Dataset.close(ERA)
     break
