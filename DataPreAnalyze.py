@@ -2,6 +2,7 @@ import xarray as xr
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from datetime import timedelta
 
 def PotentialVorticity(vo, t, P=500):
 	"""
@@ -33,7 +34,7 @@ def OneWave(data):
 	returnList = [maxA, angle]
 	return returnList
 
-adressF = 'D:/datas/dachuang/台风预测数据/typhoon(CHINA)/typhoon forecast data.csv'
+adressF = 'D:/datas/dachuang/台风预测数据/typhoon(CHINA)/typhoon forecast data0.csv'
 adressLSM = "D:/datas/dachuang/masks/IMERG_land_sea_mask.nc"
 adressERAH = "E:/data/"
 adressERAT = ".grib"
@@ -109,5 +110,40 @@ def ShowFig():
 	plt.legend()
 	plt.show()
 
+
+
+def Pop(forecastData):
+	"""
+	统一deltaT为6h
+	:param forecastData: 读入的台风预报数据
+	:return:
+	"""
+	forecastData['time+0'] = pd.to_datetime(forecastData['time+0'])
+	for i in range(forecastData.shape[0]-1):
+		if i+1 >= forecastData.shape[0]:
+			return forecastData
+		if(forecastData.loc[i+1, 'time+0'] - forecastData.loc[i, 'time+0'] < timedelta(hours=6))and(forecastData.loc[i+1, 'nums'] == forecastData.loc[i, 'nums']):
+			print(forecastData.loc[i + 1, 'time+0'] - forecastData.loc[i, 'time+0'], forecastData.loc[i, 'nums'], i)
+			forecastData = forecastData.drop(forecastData[(forecastData['nums']==forecastData.loc[i, 'nums']) & (timedelta(hours=0)< forecastData['time+0']-forecastData.loc[i, 'time+0']) & (forecastData['time+0']-forecastData.loc[i, 'time+0']<timedelta(hours=6))].index)
+			forecastData = forecastData.reset_index(drop=True)
+			print(forecastData.loc[i + 1, 'time+0'] - forecastData.loc[i, 'time+0'], i, forecastData.shape, '\n')
+		if i+1 >= forecastData.shape[0]:
+			return forecastData
+	return forecastData
+
+def Rolling(forecastData):
+	"""
+	:param forecastData: 处理过后的台风数据（dataframe），接下来用于滑动窗口
+	:return:
+	"""
+	#forecastData = forecastData.groupby('nums')	#为台风分组，方便后续滑动窗口运算
+	print(forecastData.rolling(window=3, min_periods=3).mean())
+	#没做完
+	return forecastData
+
+
+
+def TrainTestSplit(forecastData):
+	pass
 
 

@@ -38,7 +38,7 @@ def DownLoad(year, month):
     dic['year'] = str(year)
     dic['month'] = str(month).zfill(2)
     dic['day'] = [str(i).zfill(2) for i in range(1, days + 1)]
-    filename = 'E:\\' + str(year) + str(month).zfill(2) + '.grib'
+    filename = 'F:\\' + str(year) + str(month).zfill(2) + '.grib'
     if os.path.exists(filename) and filename in existedFiles:
         return None
     c.retrieve('reanalysis-era5-pressure-levels', dic, filename)
@@ -71,7 +71,7 @@ def DownLoad4():
 
 
 def DownLoad5():
-    for year in range(2006, 2020):
+    for year in range(2006, 2023):
         for month in range(1, 13):
             DownLoad(year, month)
 
@@ -94,5 +94,5 @@ def RFT(filename):
         f.write(filename+'\n')
 
 
-StartDownload()
-
+#StartDownload()
+DownLoad5()
