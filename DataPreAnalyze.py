@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import timedelta
 
+
 def PotentialVorticity(vo, t, P=500):
 	"""
 	:param vo: 输入等压面的位涡
@@ -142,12 +143,28 @@ def Rolling(forecastData, delta=4):
 	:return:
 	"""
 	forecastData = forecastData.groupby('nums')	#为台风分组，方便后续滑动窗口运算
+	reDataFrame = pd.DataFrame()
 	for nums, data in forecastData:
+		# 将所有数据按台风序号划分
+		data['index'] = range(1, len(data) + 1)
 		if data.shape[0] <= delta:
 			continue
 		else:
-			for index in range(4, data.shape[0]-4):
-				piece = data.loc[index, []]
+			for index in range(delta, data.shape[0]):
+				# 在每个台风中使用滑动窗口
+				line = pd.DataFrame(data.loc[data['index'] == index, ['lon+0', 'lat+0']])	# 初始化第一行
+				for i in range(delta):
+					# 将delta区间内的数据逐个添加到原数据上
+					l = data.loc[data['index'] == index - i, ['lon+0', 'lat+0']]
+					l.columns = ['lon-'+str(i+1), 'lat-'+str(i+1)]
+					line = pd.concat([line, l], axis=1)
+				line = line.reset_index()
+				reDataFrame = pd.concat([reDataFrame, line])
+				reDataFrame = reDataFrame.reset_index(drop=True)
+
+
+	print(reDataFrame)
+
 	#没做完
 	return forecastData
 
@@ -156,5 +173,6 @@ def Rolling(forecastData, delta=4):
 def TrainTestSplit(forecastData):
 	pass
 
-
-Rolling(pd.read_csv(adressF, index_col=0, low_memory=False))
+# 别乱动
+forecastData = pd.read_csv(adressF, index_col=0, low_memory=False, usecols=[1, 3, 4, 10, 11])
+Rolling(forecastData)
