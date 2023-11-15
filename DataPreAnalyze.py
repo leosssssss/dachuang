@@ -34,7 +34,7 @@ def OneWave(data):
 	returnList = [maxA, angle]
 	return returnList
 
-adressF = 'D:/datas/dachuang/台风预测数据/typhoon(CHINA)/typhoon forecast data0.csv'
+adressF = 'D:/datas/dachuang/台风预测数据/typhoon(CHINA)/typhoon forecast data.csv'
 adressLSM = "D:/datas/dachuang/masks/IMERG_land_sea_mask.nc"
 adressERAH = "E:/data/"
 adressERAT = ".grib"
@@ -65,6 +65,7 @@ def Operate(adressForcast, adressLSMData, adressERAHData, adressERATData, adress
 
 def Autocorrelation(adressForcast, delay=10):
 	"""已经完成了求时间序列，后续还剩求自相关系数"""
+	#已完成
 	forcastData = pd.read_csv(adressForcast, index_col=0, low_memory=False)
 	l = 300
 	ac = np.zeros((l, 2))   #返回的序列
@@ -91,6 +92,7 @@ def Autocorrelation(adressForcast, delay=10):
 
 
 def autocorrelation(x,lags, n=None):#计算lags阶以内的自相关系数，返回lags个值，将序列均值、标准差视为不变
+	#已完成
 	n = len(x)
 	x =np.array(x)
 	variance = x.var()
@@ -101,12 +103,13 @@ def autocorrelation(x,lags, n=None):#计算lags阶以内的自相关系数，返
 
 
 def ShowFig():
-	plt.plot(Autocorrelation(adressF, 15)[1], c='b', label='original value')
-	plt.plot(abs(Autocorrelation(adressF, 15)[1]), c='r', label='absolute value')
+	#已完成
+	plt.plot(Autocorrelation(adressF, 15)[0], c='b', label='original value')
+	plt.plot(abs(Autocorrelation(adressF, 15)[0]), c='r', label='absolute value')
 	plt.axhline(0, color='k', linestyle='--')
-	plt.xlabel("tome interval (per 6 hours)")
+	plt.xlabel("time interval (per 6 hours)")
 	plt.ylabel("autocorrection coefficient")
-	plt.title("autocorrection of pressure")
+	plt.title("autocorrection of speed")
 	plt.legend()
 	plt.show()
 
@@ -118,6 +121,7 @@ def Pop(forecastData):
 	:param forecastData: 读入的台风预报数据
 	:return:
 	"""
+	#以完成
 	forecastData['time+0'] = pd.to_datetime(forecastData['time+0'])
 	for i in range(forecastData.shape[0]-1):
 		if i+1 >= forecastData.shape[0]:
@@ -131,13 +135,19 @@ def Pop(forecastData):
 			return forecastData
 	return forecastData
 
-def Rolling(forecastData):
+def Rolling(forecastData, delta=4):
 	"""
 	:param forecastData: 处理过后的台风数据（dataframe），接下来用于滑动窗口
+	:param delta: 时间间隔，默认为4x6=24h
 	:return:
 	"""
-	#forecastData = forecastData.groupby('nums')	#为台风分组，方便后续滑动窗口运算
-	print(forecastData.rolling(window=3, min_periods=3).mean())
+	forecastData = forecastData.groupby('nums')	#为台风分组，方便后续滑动窗口运算
+	for nums, data in forecastData:
+		if data.shape[0] <= delta:
+			continue
+		else:
+			for index in range(4, data.shape[0]-4):
+				piece = data.loc[index, []]
 	#没做完
 	return forecastData
 
@@ -147,3 +157,4 @@ def TrainTestSplit(forecastData):
 	pass
 
 
+Rolling(pd.read_csv(adressF, index_col=0, low_memory=False))
