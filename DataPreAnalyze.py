@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import timedelta
-
-
+import warnings
+warnings.filterwarnings("ignore")
 def PotentialVorticity(vo, t, P=500):
 	"""
 	:param vo: 输入等压面的位涡
@@ -12,10 +12,13 @@ def PotentialVorticity(vo, t, P=500):
 	:param P: 等压面层
 	:return: 返回位涡
 	"""
+	minimum = min(vo.shape[0], vo.shape[1])
+	vo = vo[:minimum, :minimum]
+	t = t[:minimum, :minimum]	# 保存为方阵便于计算
 	R = 8.3144626   #气体常数R
 	_rho = R*t/P #500hPa密度的倒数
 	theta = t*(1000/P)**0.286    #500hPa上的位温
-	C = np.identity(np.shape(t)[0]) - 1/np.shape(t)[0]*np.ones(np.shape(t))    #中心阵
+	C = np.identity(np.shape(t)[1]) - 1/np.shape(t)[1]*np.ones(np.shape(t)[1])    #中心阵
 	D_theta = np.dot(np.dot(theta, C), theta.T) #位温的散度
 	potentialVorticity = np.dot(np.dot(_rho, vo), D_theta)
 	return potentialVorticity
@@ -32,6 +35,7 @@ def OneWave(data):
 	maxI = fr1[A == max(A)]
 	maxA = max(A)
 	angle = np.angle(maxI)
+	angle.tolist()
 	returnList = [maxA, angle]
 	return returnList
 
@@ -42,26 +46,66 @@ adressERAT = ".grib"
 adressGeopotential = "D:/datas/dachuang/masks/Geopotential.grib"
 def Operate(adressForcast, adressLSMData, adressERAHData, adressERATData, adressGeopotentialData):
 	Frange = 4.5
+	reDataFrame = pd.DataFrame()
 	forecastData = pd.read_csv(adressForcast, index_col=0, low_memory=False)
 	LSMask = xr.open_dataset(adressLSMData)
 	geopotential = xr.open_dataset(adressGeopotentialData, engine='cfgrib')
+	newDataFrame = pd.DataFrame()
 	for i in range(forecastData.shape[0]):
 		month = forecastData.loc[i, 'time+0'][0:4]+forecastData.loc[i, 'time+0'][5:7]
 		time = forecastData.loc[i, 'time+0']
 		lon = forecastData.loc[i, 'lon+0']
 		lat = forecastData.loc[i, 'lat+0']
 		ERA = xr.open_dataset(adressERAHData + month + adressERATData, engine='cfgrib', mask_and_scale=False)
+		print(i)
 		d500 = ERA.d.loc[time, lat+Frange:lat-Frange, lon-Frange:lon+Frange].values #500hPa的散度
+		d500M = d500.mean()
 		u500 = ERA.u.loc[time, lat+Frange:lat-Frange, lon-Frange:lon+Frange].values #500hPa的水平风速
+		u500M = u500.mean()
 		vo500 = ERA.vo.loc[time, lat+Frange:lat-Frange, lon-Frange:lon+Frange].values   #500hPa的绝对涡度
 		t500 = ERA.vo.loc[time, lat+Frange:lat-Frange, lon-Frange:lon+Frange].values    #500hPa的温度
 		pv = PotentialVorticity(vo500, t500)    #500hPa的位涡
+		pvM = pv.mean()
 		LSM = LSMask.landseamask.loc[lat-Frange:lat+Frange, lon-Frange:lon+Frange].values   #海陆遮罩
 		G = geopotential.z.loc[lat+Frange:lat-Frange, lon-Frange:lon+Frange].values #地势
-		LSMOW = OneWave(LSM)    #海陆遮罩的一波处理
-		GOW = OneWave(G) #地势的一波处理
-		xr.Dataset.close(ERA)
-		break
+		LSMOW = OneWave(LSM)[0]    #海陆遮罩的一波处理
+		GOW = OneWave(G)[0] #地势的一波处理
+		line = [u500M, d500M, pvM, LSMOW, GOW]
+		cName = ['u500+0', 'd500+0', 'pv+0', 'LSMOW', 'GOW']
+		line = pd.DataFrame(line).T
+		line.columns = cName
+		newDataFrame = pd.concat([newDataFrame, line])
+		newDataFrame = newDataFrame.reset_index(drop=True)
+	reDataFrame = pd.concat([forecastData, newDataFrame])
+	print(reDataFrame)
+
+
+def Rolling(forecastData, delta=4):
+	"""
+	:param forecastData: 处理过后的台风数据（dataframe），接下来用于滑动窗口
+	:param delta: 时间间隔，默认为4x6=24h
+	:return:
+	"""
+	forecastData = forecastData.groupby('nums')	#为台风分组，方便后续滑动窗口运算
+	reDataFrame = pd.DataFrame()
+	for nums, data in forecastData:
+		# 将所有数据按台风序号划分
+		data['index'] = range(1, len(data) + 1)
+		if data.shape[0] <= delta:
+			continue
+		else:
+			for index in range(delta, data.shape[0]):
+				# 在每个台风中使用滑动窗口
+				line = pd.DataFrame(data.loc[data['index'] == index, ['lon+0', 'lat+0']])	# 初始化第一行
+				for i in range(delta):
+					# 将delta区间内的数据逐个添加到原数据上
+					l = data.loc[data['index'] == index - i, ['lon+0', 'lat+0']]
+					l.columns = ['lon-'+str(i+1), 'lat-'+str(i+1)]
+					line = pd.concat([line, l], axis=1)
+				line = line.reset_index()
+				reDataFrame = pd.concat([reDataFrame, line])
+				reDataFrame = reDataFrame.reset_index(drop=True)
+	return reDataFrame
 
 
 def Autocorrelation(adressForcast, delay=10):
@@ -122,7 +166,7 @@ def Pop(forecastData):
 	:param forecastData: 读入的台风预报数据
 	:return:
 	"""
-	#以完成
+	#已完成
 	forecastData['time+0'] = pd.to_datetime(forecastData['time+0'])
 	for i in range(forecastData.shape[0]-1):
 		if i+1 >= forecastData.shape[0]:
@@ -136,43 +180,10 @@ def Pop(forecastData):
 			return forecastData
 	return forecastData
 
-def Rolling(forecastData, delta=4):
-	"""
-	:param forecastData: 处理过后的台风数据（dataframe），接下来用于滑动窗口
-	:param delta: 时间间隔，默认为4x6=24h
-	:return:
-	"""
-	forecastData = forecastData.groupby('nums')	#为台风分组，方便后续滑动窗口运算
-	reDataFrame = pd.DataFrame()
-	for nums, data in forecastData:
-		# 将所有数据按台风序号划分
-		data['index'] = range(1, len(data) + 1)
-		if data.shape[0] <= delta:
-			continue
-		else:
-			for index in range(delta, data.shape[0]):
-				# 在每个台风中使用滑动窗口
-				line = pd.DataFrame(data.loc[data['index'] == index, ['lon+0', 'lat+0']])	# 初始化第一行
-				for i in range(delta):
-					# 将delta区间内的数据逐个添加到原数据上
-					l = data.loc[data['index'] == index - i, ['lon+0', 'lat+0']]
-					l.columns = ['lon-'+str(i+1), 'lat-'+str(i+1)]
-					line = pd.concat([line, l], axis=1)
-				line = line.reset_index()
-				reDataFrame = pd.concat([reDataFrame, line])
-				reDataFrame = reDataFrame.reset_index(drop=True)
-
-
-	print(reDataFrame)
-
-	#没做完
-	return forecastData
-
-
 
 def TrainTestSplit(forecastData):
 	pass
 
 # 别乱动
 forecastData = pd.read_csv(adressF, index_col=0, low_memory=False, usecols=[1, 3, 4, 10, 11])
-Rolling(forecastData)
+Operate(adressF, adressLSM, adressERAH, adressERAT, adressGeopotential)
