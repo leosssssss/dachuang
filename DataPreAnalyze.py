@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import timedelta
 import warnings
+import eccodes
+import cfgrib
 warnings.filterwarnings("ignore")
 def PotentialVorticity(vo, t, P=500):
 	"""
@@ -44,19 +46,34 @@ adressLSM = "D:/datas/dachuang/masks/IMERG_land_sea_mask.nc"
 adressERAH = "E:/data/"
 adressERAT = ".grib"
 adressGeopotential = "D:/datas/dachuang/masks/Geopotential.grib"
+
+adressFL = '/mnt/d/datas/dachuang/台风预测数据/typhoon(CHINA)/typhoon forecast data.csv'
+adressLSML = "/mnt/d/datas/dachuang/masks/IMERG_land_sea_mask.nc"
+adressERAHL = "/mnt/e/data/"
+adressERATL= ".grib"
+adressGeopotentialL = "/mnt/d/datas/dachuang/masks/Geopotential.grib"
 def Operate(adressForcast, adressLSMData, adressERAHData, adressERATData, adressGeopotentialData):
+	'''
+	:param adressForcast: 台风预测数据的地址
+	:param adressLSMData: 海陆遮罩的数据地址
+	:param adressERAHData: ERA5数据所在的文件夹
+	:param adressERATData: .grib
+	:param adressGeopotentialData: 地势数据所在的地址
+	:return:
+	'''
+	# 完成了！
 	Frange = 4.5
 	reDataFrame = pd.DataFrame()
 	forecastData = pd.read_csv(adressForcast, index_col=0, low_memory=False)
 	LSMask = xr.open_dataset(adressLSMData)
 	geopotential = xr.open_dataset(adressGeopotentialData, engine='cfgrib')
 	newDataFrame = pd.DataFrame()
-	for i in range(forecastData.shape[0]):
+	for i in range(0, forecastData.shape[0]):
 		month = forecastData.loc[i, 'time+0'][0:4]+forecastData.loc[i, 'time+0'][5:7]
 		time = forecastData.loc[i, 'time+0']
 		lon = forecastData.loc[i, 'lon+0']
 		lat = forecastData.loc[i, 'lat+0']
-		ERA = xr.open_dataset(adressERAHData + month + adressERATData, engine='cfgrib', mask_and_scale=False)
+		ERA = xr.open_dataset(adressERAHData + month + adressERATData, mask_and_scale=False, engine='cfgrib')
 		print(i)
 		d500 = ERA.d.loc[time, lat+Frange:lat-Frange, lon-Frange:lon+Frange].values #500hPa的散度
 		d500M = d500.mean()
@@ -74,10 +91,11 @@ def Operate(adressForcast, adressLSMData, adressERAHData, adressERATData, adress
 		cName = ['u500+0', 'd500+0', 'pv+0', 'LSMOW', 'GOW']
 		line = pd.DataFrame(line).T
 		line.columns = cName
+		print(line)
 		newDataFrame = pd.concat([newDataFrame, line])
 		newDataFrame = newDataFrame.reset_index(drop=True)
-	reDataFrame = pd.concat([forecastData, newDataFrame])
-	print(reDataFrame)
+	reDataFrame = pd.concat([forecastData, newDataFrame], axis=1)
+	reDataFrame.to_csv('/mnt/d/datas/dachuang/台风预测数据/typhoon(CHINA)/typhoon forecast data1.csv')
 
 
 def Rolling(forecastData, delta=4):
@@ -86,26 +104,57 @@ def Rolling(forecastData, delta=4):
 	:param delta: 时间间隔，默认为4x6=24h
 	:return:
 	"""
-	forecastData = forecastData.groupby('nums')	#为台风分组，方便后续滑动窗口运算
+	# col = ['lon+0', 'lat+0', 'u500+0', 'd500+0', 'pv+0', 'LSMOW+0', 'GOW+0']	#要改的维度
+	# forecastData1 = forecastData.groupby('nums')	#为台风分组，方便后续滑动窗口运算
+	# TCDataFrame = pd.DataFrame()
+	# for nums, data in forecastData1:
+	# 	# 将所有数据按台风序号划分
+	# 	data['index'] = range(len(data))
+	# 	if data.shape[0] <= delta:
+	# 		continue
+	# 	else:
+	# 		reDataFrame = pd.DataFrame()
+	# 		for index in range(delta, data.shape[0]):
+	# 			# 在每个台风中使用滑动窗口
+	# 			line = pd.DataFrame(data.loc[data['index'] == index-1, col])	# 初始化第一行
+	# 			line.columns = [c[0:-2] + '-1' for c in col]
+	# 			for i in range(delta-1):
+	# 				# 将delta区间内的数据逐个添加到原数据上
+	# 				l = data.loc[data['index'] == index - i-2, col]
+	# 				l.columns = [c[0:-2]+str(-i-2) for c in col]
+	# 				l.index = [line.index[0]]
+	# 				line = pd.concat([line, l], axis=1)
+	# 			line = line.reset_index()
+	# 			reDataFrame = pd.concat([reDataFrame, line], )
+	# 			reDataFrame = reDataFrame.reset_index(drop=True)
+	# 		reDataFrame['index'] = reDataFrame['index']+1
+	# 		reDataFrame.set_index(reDataFrame['index'], inplace=True)
+	# 		reDataFrame.drop(['index'], axis=1, inplace=True)
+	# 		reDataFrame = reDataFrame.rename_axis(None)
+	# 		#forecastData = pd.concat([forecastData, reDataFrame], axis=1)
+	# 		TCDataFrame = TCDataFrame.append(reDataFrame)
+	# forecastData = pd.concat([forecastData, TCDataFrame], axis=1)
+	# forecastData = forecastData.dropna(subset=['GOW-4'])
+
+	col = ['lon+0', 'lat+0']	#要改的维度
+	forecastData1 = forecastData.groupby('nums')	#为台风分组，方便后续滑动窗口运算
 	reDataFrame = pd.DataFrame()
-	for nums, data in forecastData:
+	for nums, data in forecastData1:
 		# 将所有数据按台风序号划分
-		data['index'] = range(1, len(data) + 1)
+		data['index'] = range(len(data))
 		if data.shape[0] <= delta:
 			continue
 		else:
 			for index in range(delta, data.shape[0]):
 				# 在每个台风中使用滑动窗口
-				line = pd.DataFrame(data.loc[data['index'] == index, ['lon+0', 'lat+0']])	# 初始化第一行
-				for i in range(delta):
-					# 将delta区间内的数据逐个添加到原数据上
-					l = data.loc[data['index'] == index - i, ['lon+0', 'lat+0']]
-					l.columns = ['lon-'+str(i+1), 'lat-'+str(i+1)]
-					line = pd.concat([line, l], axis=1)
-				line = line.reset_index()
+				line = pd.DataFrame(data.loc[data['index'] == index, col])	# 初始化第一行
+				line.index = [line.index[0] - 1]
+				line.columns = ['rlon+1', 'rlat+1']
 				reDataFrame = pd.concat([reDataFrame, line])
-				reDataFrame = reDataFrame.reset_index(drop=True)
-	return reDataFrame
+	forecastData = pd.concat([forecastData, reDataFrame], axis=1)
+	forecastData = forecastData.dropna(subset=['rlat+1'])
+	forecastData = forecastData.reset_index()
+	return forecastData
 
 
 def Autocorrelation(adressForcast, delay=10):
@@ -185,5 +234,8 @@ def TrainTestSplit(forecastData):
 	pass
 
 # 别乱动
-forecastData = pd.read_csv(adressF, index_col=0, low_memory=False, usecols=[1, 3, 4, 10, 11])
-Operate(adressF, adressLSM, adressERAH, adressERAT, adressGeopotential)
+forecastData = pd.read_csv(adressF, index_col=0, low_memory=False)
+# Operate(adressFL, adressLSML, adressERAHL, adressERATL, adressGeopotentialL)
+# pd.set_option('display.max_columns', None)
+DFSave = Rolling(forecastData, delta=1)
+DFSave.to_csv('D:/datas/dachuang/台风预测数据/typhoon(CHINA)/typhoon forecast data2.csv')
