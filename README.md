@@ -1,6 +1,8 @@
 # dachuang项目介绍
 本项目用于保存大创期间的源代码，内容部分包括气象数据的收集与整理，机器学习模型的选取、训练等内容。
+
 <span style="color:red">WARNING: This repository is deprecated, the latest one can be visited by https://github.com/leosssssss/TC-predict-model</span>
+
 ## 本脚本的功能
 ## 脚本的使用指南
 ### 运行脚本（OperationScript）的使用方法介绍
